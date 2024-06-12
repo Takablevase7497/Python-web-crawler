@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from docx import Document
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
 
 def fetch_page_content(url):
     try:
@@ -18,7 +19,7 @@ def parse_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     
     title = soup.title.string if soup.title else '無標題'
-    texts = soup.stripped_strings
+    texts = list(soup.stripped_strings)
     links = [a['href'] for a in soup.find_all('a', href=True)]
     images = [img['src'] for img in soup.find_all('img', src=True)]
     
@@ -40,18 +41,17 @@ def save_to_word(title, texts, links, images, filename):
 
 def start_scraping():
     url = url_entry.get()
-    filename = filename_entry.get()
     
     if not url:
         messagebox.showwarning("輸入錯誤", "請輸入URL。")
         return
     
-    if not filename:
-        messagebox.showwarning("輸入錯誤", "請輸入文件名。")
-        return
+    filename = filedialog.asksaveasfilename(defaultextension=".docx",
+                                            filetypes=[("Word文件", "*.docx"), ("所有文件", "*.*")])
     
-    if not filename.endswith('.docx'):
-        filename += '.docx'
+    if not filename:
+        messagebox.showwarning("輸入錯誤", "請選擇文件名和路徑。")
+        return
     
     html_content = fetch_page_content(url)
     if not html_content:
@@ -70,10 +70,6 @@ tk.Label(root, text="請輸入URL:").grid(row=0, column=0, padx=10, pady=10)
 url_entry = tk.Entry(root, width=50)
 url_entry.grid(row=0, column=1, padx=10, pady=10)
 
-tk.Label(root, text="請輸入文件名:").grid(row=1, column=0, padx=10, pady=10)
-filename_entry = tk.Entry(root, width=50)
-filename_entry.grid(row=1, column=1, padx=10, pady=10)
-
-tk.Button(root, text="開始爬取", command=start_scraping).grid(row=2, column=0, columnspan=2, pady=20)
+tk.Button(root, text="選擇文件保存位置並開始爬取", command=start_scraping).grid(row=2, column=0, columnspan=2, pady=20)
 
 root.mainloop()
